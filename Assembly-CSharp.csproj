@@ -157,9 +157,10 @@
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\UnityExtensions\ScreenshotTaker.cs" />
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\UnityExtensions\TransformExtensions.cs" />
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\UnityExtensions\VectorExtensions.cs" />
+     <Compile Include="Assets\Scripts\GameObjectScripts\Bullet.cs" />
      <Compile Include="Assets\Scripts\MathHelper.cs" />
+     <Compile Include="Assets\Scripts\PlayerScripts\Gun.cs" />
      <Compile Include="Assets\Scripts\PlayerScripts\PlayerController.cs" />
-     <Compile Include="Assets\Scripts\PlayerScripts\PlayerShooting.cs" />
      <Compile Include="Assets\Scripts\ResolutionIndependentCamera.cs" />
      <Compile Include="Assets\Scripts\TileScripts\PlatformTile.cs" />
      <None Include="Assets\Demigiant\DOTween\readme.txt" />

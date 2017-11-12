@@ -20,9 +20,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4748658856588722}
   - component: {fileID: 212706662148019998}
-  - component: {fileID: 50169539342753858}
   - component: {fileID: 60351283480690090}
-  m_Layer: 8
+  - component: {fileID: 50169539342753858}
+  m_Layer: 9
   m_Name: spike_tile_go
   m_TagString: terrain_spike_tile
   m_Icon: {fileID: 0}

@@ -1,0 +1,16 @@
+﻿<Properties StartupItem="Assembly-CSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/PlayerScripts/Gun.cs">
+    <Files>
+      <File FileName="Assets/Scripts/PlayerScripts/PlayerController.cs" Line="56" Column="16" />
+      <File FileName="Assets/Gamelogic/Extensions/Examples/Pool/PoolExampleMain.cs" Line="26" Column="5" />
+      <File FileName="Assets/Scripts/PlayerScripts/Gun.cs" Line="32" Column="5" />
+      <File FileName="Assets/Scripts/GameObjectScripts/Bullet.cs" Line="44" Column="3" />
+      <File FileName="Assets/Gamelogic/Extensions/Plugins/Scripts/Patterns/Pool.cs" Line="67" Column="3" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

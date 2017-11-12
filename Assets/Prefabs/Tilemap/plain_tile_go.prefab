@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 212839128658588208}
   - component: {fileID: 61485749048004028}
   - component: {fileID: 50155467002933466}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: plain_tile_go
   m_TagString: terrain_plain_tile
   m_Icon: {fileID: 0}

@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 212025090924338678}
   - component: {fileID: 61948545331031432}
   - component: {fileID: 50838871347873270}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: reflective_tile_go
   m_TagString: terrain_reflective_tile
   m_Icon: {fileID: 0}

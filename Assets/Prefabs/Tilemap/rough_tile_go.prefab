@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 212494724501267870}
   - component: {fileID: 61087218757116460}
   - component: {fileID: 50650617856813482}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: rough_tile_go
   m_TagString: terrain_rough_tile
   m_Icon: {fileID: 0}

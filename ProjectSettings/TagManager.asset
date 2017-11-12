@@ -17,9 +17,9 @@ TagManager:
   - UI
   - 
   - 
-  - Raycasted
-  - 
   - Player
+  - Terrain
+  - 
   - 
   - 
   - 
@@ -47,6 +47,12 @@ TagManager:
     locked: 0
   - name: Background
     uniqueID: 1331499821
+    locked: 0
+  - name: Player
+    uniqueID: 1990827351
+    locked: 0
+  - name: Game Objects
+    uniqueID: 2548089039
     locked: 0
   - name: Tilemap
     uniqueID: 126387799
