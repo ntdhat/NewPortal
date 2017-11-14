@@ -25,3 +25,34 @@
 /Users/Shared/Unity/New Portal/Temp/bin/Debug/Unity.CecilTools.dll
 /Users/Shared/Unity/New Portal/Temp/bin/Debug/Unity.Cecil.Pdb.dll
 /Users/Shared/Unity/New Portal/Temp/bin/Debug/Unity.Cecil.Mdb.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Assembly-CSharp-firstpass.dll.mdb
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Assembly-CSharp-firstpass.dll
+/Users/admin/Development/projects/github/NewPortal/obj/Debug/Assembly-CSharp-firstpass.dll
+/Users/admin/Development/projects/github/NewPortal/obj/Debug/Assembly-CSharp-firstpass.dll.mdb
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEditor.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.UI.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.Networking.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.TestRunner.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/nunit.framework.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.Timeline.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.UIAutomation.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.GoogleAudioSpatializer.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.HoloLens.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.SpatialTracking.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/DOTween.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/DOTween43.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/DOTween46.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/DOTween50.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.Analytics.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/UnityEngine.Purchasing.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.Cecil.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.SerializationLogic.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/ExCSS.Unity.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.DataContract.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.Legacy.NRefactory.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.UNetWeaver.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.UNetWeaver.dll.mdb
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.CecilTools.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.Cecil.Pdb.dll
+/Users/admin/Development/projects/github/NewPortal/Temp/bin/Debug/Unity.Cecil.Mdb.dll

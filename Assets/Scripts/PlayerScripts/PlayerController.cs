@@ -40,8 +40,8 @@ public class PlayerController : MonoBehaviour {
 		return _renderer.isVisible;
 	}
 
-	void WannaDie () {
-		//Debug.Log ("Wanna Die");
+	public void WannaDie () {
+		Debug.Log ("Wanna Die");
 	}
 
 	private void FixedUpdate()
@@ -49,11 +49,14 @@ public class PlayerController : MonoBehaviour {
 		MakeMovement ();
 	}
 
-	void OnTriggerEnter2D(Collider2D other)
+	void OnCollisionEnter2D (Collision2D other)
 	{
-		if (other.gameObject.tag == "terrain_spike_tile") {
-			WannaDie ();
-		}
+		//Debug.Log ("Player collide with: " + other.gameObject.tag);
+	}
+
+	void OnTriggerEnter2D (Collider2D other)
+	{
+		//Debug.Log ("Player triggered with: " + other.gameObject.tag);
 	}
 
 	void MakeMovement(){

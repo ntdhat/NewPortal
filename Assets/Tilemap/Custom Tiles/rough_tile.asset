@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: rough_tile
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 4fc79d057a7074231b7bc36079294a54, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9338235, g: 0.9338235, b: 0.9338235, a: 1}
   m_Transform:
     e00: 1
     e01: 0
@@ -30,8 +30,7 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 1
-  m_InstancedGameObject: {fileID: 1019843267428896, guid: ea478ce3dc9924f3b9f80750cfe466fb,
-    type: 2}
+  m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
-  m_ColliderType: 1
+  m_ColliderType: 2
   type: 1

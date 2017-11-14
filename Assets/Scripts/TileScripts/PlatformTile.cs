@@ -4,7 +4,17 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEditor;
 
+public enum PlatformType
+{
+	Plain,
+	Rough,
+	Spike,
+	Reflective
+}
+
 public class PlatformTile : Tile {
+
+	public PlatformType type;
 
 	#if UNITY_EDITOR
 	[MenuItem("Assets/Create/Custom Tiles/Platform")]

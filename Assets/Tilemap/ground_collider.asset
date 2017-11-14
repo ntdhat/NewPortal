@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: ground_collider
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 4fc79d057a7074231b7bc36079294a54, type: 3}
-  m_Color: {r: 0.08083375, g: 0.0071907504, b: 0.97794116, a: 1}
+  m_Color: {r: 0.11724186, g: 0, b: 1, a: 1}
   m_Transform:
     e00: 1
     e01: 0
@@ -32,4 +32,4 @@ MonoBehaviour:
     e33: 1
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
-  m_ColliderType: 1
+  m_ColliderType: 2

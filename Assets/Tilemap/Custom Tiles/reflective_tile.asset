@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: reflective_tile
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 4fc79d057a7074231b7bc36079294a54, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.8897059, g: 0.17663279, b: 0.17663279, a: 1}
   m_Transform:
     e00: 1
     e01: 0
@@ -30,8 +30,7 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 1
-  m_InstancedGameObject: {fileID: 1779714534524250, guid: 525151c23e8f347679ef9645ea6fd406,
-    type: 2}
+  m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
-  m_ColliderType: 1
-  type: 0
+  m_ColliderType: 2
+  type: 3

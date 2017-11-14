@@ -4,10 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - terrain_plain_tile
-  - terrain_rough_tile
   - terrain_spike_tile
-  - terrain_reflective_tile
+  - terrain_surfaces
+  - terrain_base
+  - Grid
   layers:
   - Default
   - TransparentFX
@@ -17,10 +17,10 @@ TagManager:
   - UI
   - 
   - 
-  - Raycasted
-  - 
+  - Terrain Surfaces
+  - Terrain Spike
+  - Terrain Base
   - Player
-  - 
   - 
   - 
   - 
@@ -47,6 +47,9 @@ TagManager:
     locked: 0
   - name: Background
     uniqueID: 1331499821
+    locked: 0
+  - name: Player
+    uniqueID: 316053737
     locked: 0
   - name: Tilemap
     uniqueID: 126387799
