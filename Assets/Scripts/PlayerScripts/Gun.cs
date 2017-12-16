@@ -7,91 +7,57 @@ using Gamelogic.Extensions;
 using System;
 using UnityEngine.Tilemaps;
 
-public class Gun : MonoBehaviour {
+public class Gun : BaseGameObject {
 	public Vector2 gunBarrel;
 	public int maxReflectedCount;
-	public GameObject bulletPrefab;
+	public SlowMotionEffect sloMoEffect;
 
-	private GameObject _terrainSurfaces;
-	private Pool<GameObject> bulletPool;
+	private GameObject terrainSurfaces;
+	private PlayerController playerCtrl;
 
-	private LineRenderer _shootingLine;
-	private List<Vector3> _shootingLinePoints;
-	private int _raycastLayerMask;
-	private float _raycastLength;
-	private Vector2 _normalOfFinalRaycastHit;
-	private Rect _screenRect;
+	private LineRenderer shootingLine;
+	private List<Vector3> shootingLinePoints;
+	private int raycastLayerMask;
+	private float raycastLength;
+	private Vector2 normalOfFinalRaycastHit;
+	private Rect screenRect;
 
-	private Vector2 _prevAxis;
+	private Vector2 prevInputAxis;
 
-	private int _shotCount;
+	new void Awake () {
+		base.Awake ();
+		gunBarrel = Vector2.zero;
+	}
 
 	// Use this for initialization
-	void Awake () {
-		Initialize ();
-	}
-
-	private void Initialize()
-	{
-		_terrainSurfaces = GameObject.FindGameObjectWithTag ("terrain_surfaces");
+	void Start () {
+		terrainSurfaces = GameObject.FindGameObjectWithTag ("terrain_surfaces");
+		playerCtrl = gameObject.GetComponentInParent <PlayerController> ();
 
 		InitializeShootingLine ();
-		InitializeBulletPool ();
 
-		_prevAxis = Vector2.zero;
-		gunBarrel = Vector2.zero;
-		_shotCount = 0;
+		prevInputAxis = Vector2.zero;
 	}
 
-	private void InitializeShootingLine()
-	{
+	private void InitializeShootingLine () {
 		SetupShootingLineRenderer ();
 		SetupShootingRayCast ();
 	}
 
-	private void SetupShootingLineRenderer()
-	{
-		_shootingLine = GetComponent<LineRenderer> ();
-		_shootingLinePoints = new List<Vector3>();
+	private void SetupShootingLineRenderer () {
+		shootingLine = GetComponent<LineRenderer> ();
+		shootingLinePoints = new List<Vector3>();
 	}
 
-	private void SetupShootingRayCast()
-	{
-		int terrainSurfacesMask = 1 << _terrainSurfaces.layer;
-		_raycastLayerMask = terrainSurfacesMask;
+	private void SetupShootingRayCast () {
+		int defaultMask = 1 << 0;
+		int terrainSurfacesMask = 1 << terrainSurfaces.layer;
+		raycastLayerMask = (terrainSurfacesMask | defaultMask);
 
 		Vector3 screenBL = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
 		Vector3 screenTR = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
-		_raycastLength = Vector3.Distance(screenBL, screenTR);
-		_screenRect = new Rect (screenBL.x, screenBL.y, screenTR.x - screenBL.x, screenTR.y - screenBL.y);
-	}
-
-	private void InitializeBulletPool()
-	{
-		bulletPool = new Pool<GameObject> (10, 
-			() => {
-				// Create
-				GameObject bulletClone = Instantiate (bulletPrefab);
-				bulletClone.GetComponent<Bullet> ().releaseBackToPool = bullet => DoneAShot (bullet);
-				return bulletClone;
-			},
-			(bullet) =>  {
-				// Destroy
-			},
-			(bullet) =>  {
-				// Awake
-				bullet.SetActive(true);
-
-				Bullet bulletScript = bullet.GetComponent<Bullet> ();
-				bulletScript.Reset ();
-				bulletScript.setType (_shotCount % 2 == 0 ? BulletType.Even : BulletType.Odd);
-
-				_shotCount++;
-			},
-			(bullet) =>  {
-				// Set to sleep
-				bullet.SetActive(false);
-			});
+		raycastLength = Vector3.Distance(screenBL, screenTR);
+		screenRect = new Rect (screenBL.x, screenBL.y, screenTR.x - screenBL.x, screenTR.y - screenBL.y);
 	}
 
 	// Update is called once per frame
@@ -101,69 +67,66 @@ public class Gun : MonoBehaviour {
 	}
 
 	#region Shooting's Aiming Line
-	private void RenderShootingLine()
-	{
+	private void RenderShootingLine () {
 		if (ShouldRenderShootingLine ()) {
 			EnableShootingLine (true);
 
 			if (ShouldCastShooting ()) {
-				_prevAxis = new Vector2 (CnInputManager.GetAxis ("ShootingX"), CnInputManager.GetAxis ("ShootingY"));
-				StartCastShooting ();
+				prevInputAxis = new Vector2 (CnInputManager.GetAxis ("ShootingX"), CnInputManager.GetAxis ("ShootingY"));
+				if (gameObject.GetComponentInParent <Rigidbody2D>().velocity.magnitude > playerCtrl.speed * 1.5f) {
+					sloMoEffect.StartEffect ();
+				}
+				CastShooting ();
 			}
 		} else {
 			EnableShootingLine (false);
 		}
 	}
 
-	private bool ShouldRenderShootingLine()
-	{
-		return CnInputManager.GetAxis ("ShootingX") != 0 || CnInputManager.GetAxis ("ShootingY") != 0;
+	private bool ShouldRenderShootingLine() {
+		return playerCtrl.CanAimAndShoot && (CnInputManager.GetAxis ("ShootingX") != 0 || CnInputManager.GetAxis ("ShootingY") != 0);
 	}
 
-	private bool ShouldCastShooting()
-	{
-		return CnInputManager.GetAxis ("ShootingX") != _prevAxis.x || CnInputManager.GetAxis ("ShootingY") != _prevAxis.y;
+	private bool ShouldCastShooting() {
+		return true;
+		// Should cast only when input axis has changes.
+		//return CnInputManager.GetAxis ("ShootingX") != prevInputAxis.x || CnInputManager.GetAxis ("ShootingY") != prevInputAxis.y;
 	}
 
-	private void EnableShootingLine(bool enabled)
-	{
-		_shootingLine.enabled = enabled;
+	private void EnableShootingLine(bool enabled) {
+		shootingLine.enabled = enabled;
 	}
 
-	private void StartCastShooting() 
-	{
+	private void CastShooting()  {
 		ResetShootingLine ();
 
 		Vector2 direction = new Vector2 (CnInputManager.GetAxis ("ShootingX"), CnInputManager.GetAxis ("ShootingY"));
 		Vector2 startPoint = transform.TransformPoint (new Vector3 (gunBarrel.x, gunBarrel.y, 0));
 
-		CastShootingRay (startPoint, direction);
-		EndCastShootingRay ();
+		DoRayCast (startPoint, direction);
+		EndCastShooting ();
 	}
 
-	private void ResetShootingLine()
-	{
-		_shootingLinePoints.Clear ();
-		_shootingLinePoints.Add (new Vector3 (gunBarrel.x, gunBarrel.y, 0));
+	private void ResetShootingLine() {
+		shootingLinePoints.Clear ();
+		shootingLinePoints.Add (transform.TransformPoint (new Vector3 (gunBarrel.x, gunBarrel.y, 0)));
 	}
 
-	private void CastShootingRay(Vector2 startPoint, Vector2 direction)
-	{
-		RaycastHit2D hit = Physics2D.Raycast (startPoint, direction, _raycastLength, _raycastLayerMask);
+	private void DoRayCast(Vector2 startPoint, Vector2 direction) {
+		RaycastHit2D hit = Physics2D.Raycast (startPoint, direction, raycastLength, raycastLayerMask);
 
-		if (hit.collider == null || !_screenRect.Contains (hit.point)) {
-			_shootingLinePoints.Add (transform.InverseTransformPoint (ShootingLineIntersectScreenBounds (direction, startPoint)));
-			_normalOfFinalRaycastHit = Vector2.zero;
+		if (hit.collider == null || !screenRect.Contains (hit.point)) {
+			shootingLinePoints.Add (ShootingLineIntersectScreenBounds (direction, startPoint));
+			normalOfFinalRaycastHit = Vector2.zero;
 		}
 		else {
-			_shootingLinePoints.Add (transform.InverseTransformPoint (hit.point));
-			_normalOfFinalRaycastHit = hit.normal;
+			shootingLinePoints.Add (hit.point);
+			normalOfFinalRaycastHit = hit.normal;
 			ProcessRaycastHit (hit, direction);
 		}
 	}
 
-	private void ProcessRaycastHit(RaycastHit2D hit, Vector2 direction)
-	{
+	private void ProcessRaycastHit(RaycastHit2D hit, Vector2 direction) {
 		if (hit == null || hit.collider == null)
 			return;
 
@@ -174,7 +137,7 @@ public class Gun : MonoBehaviour {
 			return;
 	
 		// If it is, reflect the ray and continue casting
-		if (_shootingLinePoints.Count >= maxReflectedCount)
+		if (shootingLinePoints.Count >= maxReflectedCount)
 			return;
 
 		Vector3 rv = Vector3.Reflect (direction, hit.normal);
@@ -182,12 +145,11 @@ public class Gun : MonoBehaviour {
 		// Move the hit point forward slightly along the relected vector to prevent collision of the raycast and the collider has just hit.
 		Vector2 newRaycastStartPoint = hit.point + reflectedDir.normalized * 0.01f;
 
-		CastShootingRay(newRaycastStartPoint, reflectedDir);
+		DoRayCast(newRaycastStartPoint, reflectedDir);
 	}
 
-	private TileBase GetTileAtWorldPoint(Vector3 worldPoint)
-	{
-		Tilemap tilemap = _terrainSurfaces.GetComponent<Tilemap> ();
+	private TileBase GetTileAtWorldPoint(Vector3 worldPoint) {
+		Tilemap tilemap = terrainSurfaces.GetComponent<Tilemap> ();
 		if (tilemap == null)
 			return null;
 		
@@ -195,12 +157,10 @@ public class Gun : MonoBehaviour {
 		return tilemap.GetTile (cellPosition);
 	}
 
-	private void EndCastShootingRay()
-	{
-		_shootingLine.positionCount = _shootingLinePoints.Count;
-
-		Vector3[] shootingLinePoints = _shootingLinePoints.ToArray ();
-		_shootingLine.SetPositions (shootingLinePoints);
+	private void EndCastShooting () {
+		shootingLine.positionCount = shootingLinePoints.Count;
+		Vector3[] points = shootingLinePoints.ToArray ();
+		shootingLine.SetPositions (points);
 	}
 
 	private Vector2 ShootingLineIntersectScreenBounds(Vector2 direction, Vector2 startPoint)
@@ -208,10 +168,10 @@ public class Gun : MonoBehaviour {
 		Vector2 shootingDir = direction.normalized;
 		Vector2 tempEndPoint = startPoint + (shootingDir * 100);
 
-		Vector2 screenBL = _screenRect.min;
-		Vector2 screenTR = _screenRect.max;
-		Vector2 screenTL = new Vector2 (_screenRect.xMin, _screenRect.yMax);
-		Vector2 screenBR = new Vector2 (_screenRect.xMax, _screenRect.yMin);
+		Vector2 screenBL = screenRect.min;
+		Vector2 screenTR = screenRect.max;
+		Vector2 screenTL = new Vector2 (screenRect.xMin, screenRect.yMax);
+		Vector2 screenBR = new Vector2 (screenRect.xMax, screenRect.yMin);
 
 		Vector2 lineSegmentsIntersectPoint;
 		Vector2 ret = Vector2.zero;
@@ -245,28 +205,32 @@ public class Gun : MonoBehaviour {
 	#region Shooting
 	private void MakeAShot()
 	{
-		if (!ShouldShoot ())
+		if (!IsShootingBtnReleased ())
 			return;
-		//Debug.Log ("Make a shot!");
 
-		_prevAxis = Vector2.zero;
+		sloMoEffect.EndEffect ();
 
-		try {
-			GameObject bullet = bulletPool.GetNewObject ();
-			bullet.GetComponent<Bullet> ().Fired (
-				transform.TransformPoint (gunBarrel),
-				TransfromWayPointsToWorldSpace (_shootingLinePoints.ToArray ()),
-				new Vector3(_normalOfFinalRaycastHit.x, _normalOfFinalRaycastHit.y, 0)
-			);
-		} catch (InvalidOperationException ex) {
-			Debug.Log (ex);
-			return;
+		prevInputAxis = Vector2.zero;
+
+		if (playerCtrl.CanAimAndShoot) {
+			try {
+				GameObject bullet = gameController.GetBullet ();
+				Bullet bulletScript = bullet.GetComponent<Bullet> ();
+				bulletScript.Fired (
+					transform.TransformPoint (gunBarrel),
+					shootingLinePoints.ToArray (),
+					new Vector3(normalOfFinalRaycastHit.x, normalOfFinalRaycastHit.y, 0)
+				);
+			} catch (InvalidOperationException ex) {
+				Debug.Log (ex);
+				return;
+			}
 		}
 	}
 
-	private bool ShouldShoot()
+	private bool IsShootingBtnReleased ()
 	{
-		return _prevAxis != Vector2.zero && CnInputManager.GetAxis ("ShootingX") == 0 && CnInputManager.GetAxis ("ShootingY") == 0;
+		return prevInputAxis != Vector2.zero && CnInputManager.GetAxis ("ShootingX") == 0 && CnInputManager.GetAxis ("ShootingY") == 0;
 	}
 
 	private Vector3[] TransfromWayPointsToWorldSpace(Vector3[] wayPoints)
@@ -276,12 +240,6 @@ public class Gun : MonoBehaviour {
 			result[i] = transform.TransformPoint (wayPoints[i]);
 		}
 		return result;
-	}
-
-	public bool DoneAShot(GameObject bulletDone)
-	{
-		bulletPool.Release (bulletDone);
-		return true;
 	}
 	#endregion
 }

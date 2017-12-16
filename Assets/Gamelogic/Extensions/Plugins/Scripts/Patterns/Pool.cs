@@ -110,6 +110,11 @@ namespace Gamelogic.Extensions
 			}
 		}
 
+		public int ActiveObjectsCount ()
+		{
+			return firstSleepingObjectIndex;
+		}
+
 		private void Kill(T obj)
 		{
 			SetToSleep(obj); //Kill object humanely	

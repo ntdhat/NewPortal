@@ -8,6 +8,7 @@ TagManager:
   - terrain_surfaces
   - terrain_base
   - Grid
+  - Port
   layers:
   - Default
   - TransparentFX
@@ -21,7 +22,7 @@ TagManager:
   - Terrain Spike
   - Terrain Base
   - Player
-  - 
+  - Ports
   - 
   - 
   - 
@@ -50,6 +51,9 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 316053737
+    locked: 0
+  - name: Objects
+    uniqueID: 1185179221
     locked: 0
   - name: Tilemap
     uniqueID: 126387799

@@ -6,55 +6,49 @@ using System;
 using UnityEngine.Tilemaps;
 using UnityEngine.Assertions;
 
-public enum BulletType {
-	Zero,
-	Odd,
-	Even
-}
-
-public class Bullet : MonoBehaviour {
-	private BulletType _type;
-	public BulletType getType() { return _type; }
-	public void setType(BulletType value) { _type = value; }
-
+public class Bullet : BaseGameObject {
 	public float travelSpeed = 70;
-	public Func<GameObject, bool> releaseBackToPool;
 
-	private GameObject _tilemapGO;
-	private GameController _gameController;
+	private Tilemap tilemap;
+	private float cellSize;
+	private int portalGateWidthInTile;
+	private Vector3 hitPoint;
+	private Vector3 hitNormal;
 
-	private Vector3[] _wayPoints;
-	private Vector3 _hitNormalVector;
-	private int _portalGateWidthInTile;
-
-	void Start()
-	{
-		_tilemapGO = GameObject.FindGameObjectWithTag ("terrain_surfaces");
-		_gameController = (GameController)GameObject.FindGameObjectWithTag ("GameController").GetComponent ("GameController");
-		_portalGateWidthInTile = _gameController.GetPortWidthInTile ();
+	public class HitResult {
+		public bool canCreatePort = false;
+		public Vector3 portPosition = Vector3.zero;
+		public Vector3 portNormal = Vector3.zero;
+		public List<Vector3Int> tilesOccupied = new List<Vector3Int>();
 	}
 
-	public void Reset()
-	{
-		_type = BulletType.Zero;
+	void Start() {
+		tilemap = GameObject.FindGameObjectWithTag ("terrain_surfaces").GetComponent<Tilemap> ();
+		cellSize = tilemap.cellSize.x;
+		portalGateWidthInTile = gameController.portWidthInTile;
 	}
 
-	public void Fired(Vector3 fromPoint, Vector3[] toPoints, Vector3 hitNormal)
-	{
+	public void Reset() {
+		
+	}
+
+	public void Fired(Vector3 fromPoint, Vector3[] toPoints, Vector3 normal) {
 		if (toPoints.Length == 0)
 			return;
 
-		_hitNormalVector = hitNormal;
-		_wayPoints = toPoints;
+		hitNormal = normal.normalized;
+		hitPoint = toPoints [toPoints.Length - 1];
+
 		transform.position = fromPoint;
 
+		float travelDuration = TravelDistance (fromPoint, toPoints) / travelSpeed;
+
 		Sequence seq = DOTween.Sequence();
-		seq.Append (transform.DOPath (toPoints, TravelDistance (fromPoint, toPoints)/travelSpeed, PathType.Linear, PathMode.Ignore));
+		seq.Append (transform.DOPath (toPoints, travelDuration, PathType.Linear, PathMode.Ignore));
 		seq.AppendCallback (() => EndMoving());
 	}
 
-	private float TravelDistance (Vector3 fromPoint, Vector3[] toPoints)
-	{
+	private float TravelDistance (Vector3 fromPoint, Vector3[] toPoints) {
 		float distance = 0f;
 		distance += Vector3.Distance (toPoints[0], fromPoint);
 		for (int i = 0; i < toPoints.Length - 1; i++) {
@@ -63,44 +57,97 @@ public class Bullet : MonoBehaviour {
 		return distance;
 	}
 
-	public void EndMoving ()
-	{
-		Vector3 placeToPutPort;
-		if (IsBulletHitValidArea (out placeToPutPort)) {
-			CreatePortalGate (placeToPutPort, _hitNormalVector.normalized);
+	public void EndMoving () {
+		HitResult hitResult = GetHitResult ();
+		if (hitResult.canCreatePort) {
+			CreatePort (hitResult);
 		}
 		EndLifeTime ();
 	}
 
-	private bool IsBulletHitValidArea (out Vector3 placeToPutPort)
-	{
-		placeToPutPort = Vector3.zero;
+	private HitResult GetHitResult () {
+		HitResult result = new HitResult ();
 
-		Tilemap tilemap = _tilemapGO.GetComponent<Tilemap> ();
-		
-		Vector3 hitPoint = _wayPoints [_wayPoints.Length - 1];
-		Vector3 hitNormal = _hitNormalVector.normalized;
+		GameObject oppositePort = gameController.GetWillReplacedPort ();
 
 		// Move the hit point slightly against the normal vector to ensure that it is located inside tile's edges.
 		Vector3 safeHitPoint = hitPoint - (hitNormal * 0.01f);
-		Vector3Int hitTilePosition = tilemap.WorldToCell (safeHitPoint);
+		Vector3Int centerTilePosition = tilemap.WorldToCell (safeHitPoint);
+		if (oppositePort == null || !IsTileValid (centerTilePosition) || IsTileOccupied (centerTilePosition, oppositePort)) {
+			result.canCreatePort = false;
+			return result;
+		}
 
-		// Validate the tile at hit point
-		PlatformTile hitTile = (PlatformTile)tilemap.GetTile (hitTilePosition);
-		if (IsTileValid (hitTile)) {
-			return IsAdjacentTilesValid (hitTilePosition, out placeToPutPort);
-		} else 
-			return false;
+		Vector3Int face = new Vector3Int ((int)hitNormal.x, (int)hitNormal.y, (int)hitNormal.z);
+		Vector3Int dominator = FindDominatorVector (safeHitPoint, hitNormal);
+
+		List<Vector3Int> occupiedTiles = new List<Vector3Int> ();
+		occupiedTiles.Add (centerTilePosition);
+
+		int tilesNeedCheck = portalGateWidthInTile - 1;
+		int validTiles = 0;
+		bool dominantSide = true, minorSide = true;
+		Vector3 portPosition = tilemap.GetCellCenterWorld (centerTilePosition) + (hitNormal * cellSize * 0.5f);
+
+		for (int i = 1; validTiles < tilesNeedCheck; i++) {
+			if (dominantSide) {
+				Vector3Int main = centerTilePosition + (dominator * i);
+				Vector3Int sub = centerTilePosition + face + (dominator * i);
+				if (IsTileExistAt (sub) || !IsTileValid (main) || IsTileOccupied (main, oppositePort)) {
+					dominantSide = false;
+				} else {
+					validTiles++;
+					Vector3 temp = new Vector3(dominator.x * cellSize, dominator.y * cellSize, 0);
+					portPosition += temp * 0.5f;
+					occupiedTiles.Add (main);
+				}
+			}
+
+			if (minorSide && validTiles < tilesNeedCheck) {
+				Vector3Int main = centerTilePosition + (dominator * i * -1);
+				Vector3Int sub = centerTilePosition + face + (dominator * i * -1);
+				if (IsTileExistAt (sub) || !IsTileValid (main) || IsTileOccupied (main, oppositePort)) {
+					minorSide = false;
+				} else {
+					validTiles++;
+					Vector3 temp = new Vector3(dominator.x * cellSize, dominator.y * cellSize, 0);
+					portPosition += (temp * -1) * 0.5f;
+					occupiedTiles.Add (main);
+				}
+			}
+
+			if (!dominantSide && !minorSide)
+				break;
+		}
+
+		result.canCreatePort = (validTiles == tilesNeedCheck);
+		if (result.canCreatePort) {
+			result.portNormal = hitNormal;
+			result.portPosition = portPosition;
+			result.tilesOccupied = occupiedTiles;
+		}
+
+		return result;
 	}
 
-	private bool IsTileValid (PlatformTile tile)
-	{
+	bool IsTileExistAt (Vector3Int pos) {
+		TileBase tile = tilemap.GetTile (pos);
+		return tile != null;
+	}
+
+	bool IsTileValid (Vector3Int tilePos) {
+		PlatformTile tile = (PlatformTile)tilemap.GetTile (tilePos);
 		return tile != null && tile.type == PlatformType.Plain;
 	}
 
-	private Vector3Int FindDominatorVector (Vector3 atPoint, Vector3 normal)
-	{
-		Tilemap tilemap = _tilemapGO.GetComponent<Tilemap> ();
+	bool IsTileOccupied (Vector3Int tilePos, GameObject otherPort) {
+		if (!otherPort.activeSelf) {
+			return false;
+		}
+		return otherPort.GetComponent<Port> ().IsOccupieTileAt (tilePos);
+	}
+
+	private Vector3Int FindDominatorVector (Vector3 atPoint, Vector3 normal) {
 		Vector3Int tilePos = tilemap.WorldToCell (atPoint);
 		Vector3Int dominator = Vector3Int.zero;
 		if (normal == Vector3.up || normal == Vector3.down) {
@@ -119,68 +166,15 @@ public class Bullet : MonoBehaviour {
 		}
 		return dominator;
 	}
-		
-	private bool IsAdjacentTilesValid (Vector3Int centerTile, out Vector3 placeToPutPort)
-	{
-		Tilemap tilemap = _tilemapGO.GetComponent<Tilemap> ();
-		int tilesNeedCheck = _portalGateWidthInTile - 1;
 
-		GameObject go = GameObject.FindGameObjectWithTag ("GameController");
-		GameController gameController = go.GetComponent<GameController> ();
-		float cellSize = gameController.GetGridCellSize ();
-
-		Vector3 hitPoint = _wayPoints [_wayPoints.Length - 1];
-		Vector3 hitNormal = _hitNormalVector.normalized;
-		// Move the hit point slightly against the normal vector to ensure that it is located inside tile's edges.
-		Vector3 safeHitPoint = hitPoint - (hitNormal * 0.01f);
-
-		placeToPutPort = tilemap.CellToWorld (centerTile) + (hitNormal * cellSize * 0.5f);
-
-		Vector3Int face = new Vector3Int ((int)hitNormal.x, (int)hitNormal.y, (int)hitNormal.z);
-		Vector3Int dominator = FindDominatorVector (safeHitPoint, hitNormal);
-	
-		int validTiles = 0;
-		bool positive = true, negative = true;
-
-		for (int i = 1; validTiles < tilesNeedCheck; i++) {
-			if (positive) {
-				//Vector3Int pRU = new Vector3Int (cellPosition.x + (i * right), cellPosition.y + 1, cellPosition.z);
-				PlatformTile tilePU = (PlatformTile)tilemap.GetTile (centerTile + face + (dominator * i));
-				PlatformTile tileP = (PlatformTile)tilemap.GetTile (centerTile + (dominator * i));
-				if (tilePU != null || !IsTileValid (tileP)) {
-					positive = false;
-				} else {
-					validTiles++;
-					Vector3 temp = new Vector3(dominator.x * cellSize, dominator.y * cellSize, 0);
-					placeToPutPort += temp * 0.5f;
-				}
-			}
-
-			if (negative && validTiles < tilesNeedCheck) {
-				PlatformTile tileNU = (PlatformTile)tilemap.GetTile (centerTile + face + (dominator * i * -1));
-				PlatformTile tileN = (PlatformTile)tilemap.GetTile (centerTile + (dominator * i * -1));
-				if (tileNU != null || !IsTileValid (tileN)) {
-					negative = false;
-				} else {
-					validTiles++;
-					Vector3 temp = new Vector3(dominator.x * cellSize, dominator.y * cellSize, 0);
-					placeToPutPort += (temp * -1) * 0.5f;
-				}
-			}
-		}
-
-		return validTiles == tilesNeedCheck;
+	public void CreatePort (HitResult hitInfo) {
+		GameObject aPort = gameController.CreatePort ();
+		aPort.transform.position = hitInfo.portPosition;
+		aPort.transform.up = hitInfo.portNormal;
+		aPort.GetComponent<Port> ().TilesOccupied = hitInfo.tilesOccupied;
 	}
 
-	public void CreatePortalGate (Vector3 atPosition, Vector3 faceTo)
-	{
-		GameObject aPort = _gameController.portPool.GetNewObject ();
-		aPort.transform.position = atPosition;
-		aPort.transform.up = faceTo;
-	}
-
-	public void EndLifeTime()
-	{
-		releaseBackToPool (gameObject);
+	public void EndLifeTime() {
+		gameController.ReleaseBullet (gameObject);
 	}
 }

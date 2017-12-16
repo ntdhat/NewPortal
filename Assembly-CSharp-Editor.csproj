@@ -70,11 +70,18 @@
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\Editor\PropertyDrawers\PositivePropertyDrawer.cs" />
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\Editor\PropertyDrawers\ReadonlyPropertyDrawer.cs" />
      <Compile Include="Assets\Gamelogic\Extensions\Plugins\Scripts\Editor\PropertyDrawers\WarningIfNullPropertyDrawer.cs" />
+     <Compile Include="Assets\PlayMaker\Editor\AssetGUIDs.cs" />
+     <Compile Include="Assets\PlayMaker\Editor\EditorStartupPrefs.cs" />
+     <Compile Include="Assets\PlayMaker\Editor\PlayMakerEditorStartup.cs" />
+     <Compile Include="Assets\PlayMaker\Editor\PlayMakerWelcomeWindow.cs" />
+     <Compile Include="Assets\PlayMaker\Editor\PreUpdateChecker.cs" />
      <None Include="Assets\Demigiant\DOTween\readme.txt" />
      <None Include="Assets\Demigiant\DOTween\DOTween43.xml" />
+     <None Include="Assets\PlayMaker\Readme.txt" />
      <None Include="Assets\Demigiant\DOTween\DOTween46.xml" />
      <None Include="Assets\Gamelogic\Extensions\Plugins\Scripts\Internal\BinaryHeap\BinaryHeapLincense.txt" />
      <None Include="Assets\Demigiant\DOTween\DOTween50.xml" />
+     <None Include="Assets\PlayMaker\Editor\Install\readme.txt" />
      <None Include="Assets\Gamelogic\Extensions\Plugins\Scripts\Internal\KDTree\KDTreeLicense.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
