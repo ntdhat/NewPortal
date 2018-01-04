@@ -14,6 +14,7 @@ public class Gun : BaseGameObject {
 
 	private GameObject terrainSurfaces;
 	private PlayerController playerCtrl;
+	private Touchpad touchpad;
 
 	private LineRenderer shootingLine;
 	private List<Vector3> shootingLinePoints;
@@ -22,11 +23,12 @@ public class Gun : BaseGameObject {
 	private Vector2 normalOfFinalRaycastHit;
 	private Rect screenRect;
 
-	private Vector2 prevInputAxis;
+	private bool isShooting;
 
 	new void Awake () {
 		base.Awake ();
 		gunBarrel = Vector2.zero;
+		touchpad = GameObject.FindGameObjectWithTag ("touchpad").GetComponent <Touchpad>();
 	}
 
 	// Use this for initialization
@@ -36,7 +38,7 @@ public class Gun : BaseGameObject {
 
 		InitializeShootingLine ();
 
-		prevInputAxis = Vector2.zero;
+		isShooting = false;
 	}
 
 	private void InitializeShootingLine () {
@@ -60,6 +62,32 @@ public class Gun : BaseGameObject {
 		screenRect = new Rect (screenBL.x, screenBL.y, screenTR.x - screenBL.x, screenTR.y - screenBL.y);
 	}
 
+	private enum ShootingInputMethod
+	{
+		Joystick,
+		Touchpad,
+		Inactive
+	}
+
+	private ShootingInputMethod shootingInputMethod = ShootingInputMethod.Inactive;
+
+	public Vector2 GetShootingAxis () {
+		Vector2 shootingAxis = Vector2.zero;
+		bool isTouchpadActivated = touchpad.IsCurrentlyTweaking;
+		bool isJoystickActivated = CnInputManager.GetAxis ("ShootingX") != 0 || CnInputManager.GetAxis ("ShootingY") != 0;
+		if (isTouchpadActivated && shootingInputMethod != ShootingInputMethod.Joystick) {
+			shootingInputMethod = ShootingInputMethod.Touchpad;
+			Vector2 touchpadWorldPos = Camera.main.ScreenToWorldPoint (touchpad.PointerPosition);
+			Vector2 barrelWorldPos = transform.TransformPoint (gunBarrel);
+			shootingAxis = touchpadWorldPos - barrelWorldPos;
+		} else if (isJoystickActivated) {
+			shootingInputMethod = ShootingInputMethod.Joystick;
+			shootingAxis.x = CnInputManager.GetAxis ("ShootingX");
+			shootingAxis.y = CnInputManager.GetAxis ("ShootingY");
+		}
+		return shootingAxis; 
+	}
+
 	// Update is called once per frame
 	void Update () {
 		RenderShootingLine ();
@@ -70,27 +98,20 @@ public class Gun : BaseGameObject {
 	private void RenderShootingLine () {
 		if (ShouldRenderShootingLine ()) {
 			EnableShootingLine (true);
-
-			if (ShouldCastShooting ()) {
-				prevInputAxis = new Vector2 (CnInputManager.GetAxis ("ShootingX"), CnInputManager.GetAxis ("ShootingY"));
-				if (gameObject.GetComponentInParent <Rigidbody2D>().velocity.magnitude > playerCtrl.speed * 1.5f) {
-					sloMoEffect.StartEffect ();
-				}
-				CastShooting ();
+			isShooting = true;
+			if (gameObject.GetComponentInParent <Rigidbody2D>().velocity.magnitude > playerCtrl.speed * 1.5f) {
+				sloMoEffect.StartEffect ();
 			}
+			CastShooting ();
 		} else {
 			EnableShootingLine (false);
+			gameController.GetDumbPort ().SetActive (false);
 		}
 	}
 
 	private bool ShouldRenderShootingLine() {
-		return playerCtrl.CanAimAndShoot && (CnInputManager.GetAxis ("ShootingX") != 0 || CnInputManager.GetAxis ("ShootingY") != 0);
-	}
-
-	private bool ShouldCastShooting() {
-		return true;
-		// Should cast only when input axis has changes.
-		//return CnInputManager.GetAxis ("ShootingX") != prevInputAxis.x || CnInputManager.GetAxis ("ShootingY") != prevInputAxis.y;
+		Vector2 shootingAxis = GetShootingAxis ();
+		return playerCtrl.CanAimAndShoot && (shootingAxis.x != 0 || shootingAxis.y != 0);
 	}
 
 	private void EnableShootingLine(bool enabled) {
@@ -98,12 +119,16 @@ public class Gun : BaseGameObject {
 	}
 
 	private void CastShooting()  {
+		if (!isShooting)
+			return;
+
 		ResetShootingLine ();
 
-		Vector2 direction = new Vector2 (CnInputManager.GetAxis ("ShootingX"), CnInputManager.GetAxis ("ShootingY"));
+		Vector2 direction = GetShootingAxis ();
 		Vector2 startPoint = transform.TransformPoint (new Vector3 (gunBarrel.x, gunBarrel.y, 0));
 
 		DoRayCast (startPoint, direction);
+		PredictShootResult ();
 		EndCastShooting ();
 	}
 
@@ -126,8 +151,39 @@ public class Gun : BaseGameObject {
 		}
 	}
 
+	private void PredictShootResult () {
+		Bullet.HitResult hitPredictResult = Bullet.PredictHitResult (
+			transform.TransformPoint (gunBarrel),
+			shootingLinePoints.ToArray (),
+			new Vector3(normalOfFinalRaycastHit.x, normalOfFinalRaycastHit.y, 0)
+		);
+
+		if (hitPredictResult.portPosition != Vector3.zero) {
+			GameObject dumbPort = gameController.GetDumbPort ();
+			dumbPort.SetActive (true);
+			dumbPort.transform.position = hitPredictResult.portPosition;
+			dumbPort.transform.up = hitPredictResult.portNormal;
+
+			SpriteRenderer renderer = dumbPort.transform.Find ("Renderer").GetComponent<SpriteRenderer> ();
+			if (hitPredictResult.canCreatePort) {
+				Color tempColor = renderer.color;
+				renderer.color = new Color (tempColor.r, tempColor.g, tempColor.b, 0.45f);
+			} else {
+				renderer.color = new Color(1, 0, 0, 0.8f);
+			}
+		} else {
+			gameController.GetDumbPort ().SetActive (false);
+		}
+	}
+
+	private void EndCastShooting () {
+		shootingLine.positionCount = shootingLinePoints.Count;
+		Vector3[] points = shootingLinePoints.ToArray ();
+		shootingLine.SetPositions (points);
+	}
+
 	private void ProcessRaycastHit(RaycastHit2D hit, Vector2 direction) {
-		if (hit == null || hit.collider == null)
+		if (!hit || !hit.collider)
 			return;
 
 		// Move the hit point slightly against the normal vector to ensure that it is located inside tile's edges.
@@ -155,12 +211,6 @@ public class Gun : BaseGameObject {
 		
 		Vector3Int cellPosition = tilemap.WorldToCell (worldPoint);
 		return tilemap.GetTile (cellPosition);
-	}
-
-	private void EndCastShooting () {
-		shootingLine.positionCount = shootingLinePoints.Count;
-		Vector3[] points = shootingLinePoints.ToArray ();
-		shootingLine.SetPositions (points);
 	}
 
 	private Vector2 ShootingLineIntersectScreenBounds(Vector2 direction, Vector2 startPoint)
@@ -203,14 +253,15 @@ public class Gun : BaseGameObject {
 	#endregion
 
 	#region Shooting
-	private void MakeAShot()
-	{
-		if (!IsShootingBtnReleased ())
+	private void MakeAShot() {
+		if (!isShooting || !IsShootingBtnReleased ())
 			return;
 
 		sloMoEffect.EndEffect ();
 
-		prevInputAxis = Vector2.zero;
+		isShooting = false;
+		shootingInputMethod = ShootingInputMethod.Inactive;
+		gameController.GetDumbPort ().SetActive (false);
 
 		if (playerCtrl.CanAimAndShoot) {
 			try {
@@ -228,13 +279,12 @@ public class Gun : BaseGameObject {
 		}
 	}
 
-	private bool IsShootingBtnReleased ()
-	{
-		return prevInputAxis != Vector2.zero && CnInputManager.GetAxis ("ShootingX") == 0 && CnInputManager.GetAxis ("ShootingY") == 0;
+	private bool IsShootingBtnReleased () {
+		Vector2 shootingAxis = GetShootingAxis ();
+		return isShooting && shootingAxis.x == 0 && shootingAxis.y == 0;
 	}
 
-	private Vector3[] TransfromWayPointsToWorldSpace(Vector3[] wayPoints)
-	{
+	private Vector3[] TransfromWayPointsToWorldSpace(Vector3[] wayPoints) {
 		Vector3[] result = new Vector3[wayPoints.Length];
 		for (int i = 0; i < wayPoints.Length; i++) {
 			result[i] = transform.TransformPoint (wayPoints[i]);

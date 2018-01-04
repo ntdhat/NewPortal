@@ -9,6 +9,7 @@ TagManager:
   - terrain_base
   - Grid
   - Port
+  - touchpad
   layers:
   - Default
   - TransparentFX

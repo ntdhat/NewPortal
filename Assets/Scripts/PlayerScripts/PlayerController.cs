@@ -83,7 +83,6 @@ public class PlayerController : BaseGameObject {
 		stateMachine.AddState(
 			PlayerState.HoverVerPort,
 			() => {
-				Debug.Log ("State is HoverVerPort");
 				canAimAndShoot = true;
 				GetComponent <BoxCollider2D>().isTrigger = true;
 				speedScale = 1f;
@@ -198,7 +197,7 @@ public class PlayerController : BaseGameObject {
 			return;
 
 		float movementX = CnInputManager.GetAxis("Horizontal");
-		float shootingX = CnInputManager.GetAxis ("ShootingX");
+		float shootingX = gun.GetShootingAxis ().x;
 
 		// Facing player to the movement direction or shooting direction (shooting direction is prefered)
 		FaceTo (movementX, shootingX);
@@ -485,7 +484,7 @@ public class PlayerController : BaseGameObject {
 		} else {
 			inVeloc = new Vector2 (rigidBody.velocity.x, 0f);
 		}
-		Debug.Log ("inVeloc.y: " + inVeloc.y + "; Mag.: " + inVeloc.magnitude);
+		//Debug.Log ("inVeloc.y: " + inVeloc.y + "; Mag.: " + inVeloc.magnitude);
 
 		Vector2 tempOutVeloc = destPort.transform.up.normalized * inVeloc.magnitude;
 		Vector2 outVeloc = tempOutVeloc;
@@ -512,8 +511,7 @@ public class PlayerController : BaseGameObject {
 				outVeloc = tempOutVeloc * minOutVeloc / tempOutVeloc.magnitude;
 			}
 		}
-
-		Debug.Log ("outVeloc.y: " + outVeloc.y + "; Mag.: " + outVeloc.magnitude);
+		//Debug.Log ("outVeloc.y: " + outVeloc.y + "; Mag.: " + outVeloc.magnitude);
 
 		rigidBody.transform.position = outPos;
 		rigidBody.velocity = outVeloc;

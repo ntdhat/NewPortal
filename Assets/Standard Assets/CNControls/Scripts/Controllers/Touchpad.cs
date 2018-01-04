@@ -34,6 +34,16 @@ namespace CnControls
         private VirtualAxis _verticalAxis;
         private int _lastDragFrameNumber;
         private bool _isCurrentlyTweaking;
+		public bool IsCurrentlyTweaking {
+			get { return _isCurrentlyTweaking; }
+		}
+
+		private Vector3 _pointerPosition;
+		public Vector3 PointerPosition {
+			get { 
+				return _pointerPosition;
+			}
+		}
 
         /// <summary>
         /// Joystick movement direction
@@ -64,6 +74,7 @@ namespace CnControls
 
         public virtual void OnDrag(PointerEventData eventData)
         {
+			
             // Some bitwise logic for constraining the touchpad along one of the axis
             // If the "Both" option was selected, non of these two checks will yield "true"
             if ((ControlMoveAxis & ControlMovementDirection.Horizontal) != 0)
@@ -76,6 +87,8 @@ namespace CnControls
             }
 
             _lastDragFrameNumber = Time.renderedFrameCount;
+
+			_pointerPosition = eventData.position;
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -85,7 +98,8 @@ namespace CnControls
             {
                 _horizintalAxis.Value = 0f;
                 _verticalAxis.Value = 0f;
-            }
+			}
+			_pointerPosition = Vector3.zero;
         }
 
         public void OnPointerDown(PointerEventData eventData)
